@@ -5,10 +5,11 @@ var Bcrypt = require('bcrypt'); // require would make it look into the node modu
 // var Joi 	 = require('joi'); //because it's a library. Help us to distinguish betw variable, and variable leading to library.
 var Auth = require('./auth')
 
-
  //include routes
+
  server.route([
- 	{ 
+ 	
+ 	{ //logging in
  		method: 'POST',
  		path: '/sessions', 
  		handler: function(request, reply) { //ALWAYS request reply here.

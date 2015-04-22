@@ -21,7 +21,7 @@ var Joi 	 = require('joi'); //because it's a library. Help us to distinguish bet
      }
    },
 
- 	{ 
+ 	{ //create account
  		method: 'POST',
  		path: '/users',
  		config: {

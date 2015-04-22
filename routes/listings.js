@@ -44,33 +44,105 @@ exports.register = function(server, options, next) {
           Auth.authenticated(request, function(result) {
             if (result.authenticated) {
               var db = request.server.plugins['hapi-mongodb'].db;
-              var session = request.session.get('hapi_twitter_session');
+              var session = request.session.get('hapi_ticketz_session');
               var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
-              var listing = { 
-                "message": request.payload.listing.message,
-                "user_id": ObjectId(session.user_id)
-                //** note: this needs to be expanded to include more fields, such as dates, remarks, etc.
-              };
-              db.collection('listings').insert(listing, function(err, writeResult) {
+              db.collection('users').findOne({ "_id": ObjectId(session.user_id) }, function(err, user) {
                 if (err) { return reply('Internal MongoDB error', err); }
-                reply(writeResult);
+                var listing = { 
+                  "user_id": ObjectId(session.user_id),
+                  "username": user.username, 
+                  "fritix": request.payload.listing.fritix,
+                  "sattix": request.payload.listing.sattix,
+                  "suntiX": request.payload.listing.suntix,
+                  "friprice": request.payload.listing.friprice,
+                  "satprice": request.payload.listing.satprice,
+                  "sunprice": request.payload.listing.sunprice,
+                  "dateposted": new Date,      
+                  "remarks": request.payload.listing.remarks,
+                };
+              db.collection('listings').insert(listing, function(err, writeResult){
+                if(err) {
+                  return reply('Internal MongoDB error', err);
+                } else {
+                  reply(writeResult);
+                }
               });
-            } else {
-              reply(result.message);
-            }
-          });
-        },
+            });
+          } else {
+            // reply that user is not authenticated
+            reply(result);
+          }
+        });
+      },
         validate: {
           payload: {
             listing: {
-              // Required, Limited to 140 chars
-              message: Joi.string().max(140).required()
-            //need to add stuff here for other parameters. Eg. max length for remark
+              // Required, Limited to 500 chars
+              fritix: Joi.number().integer().min(1).max(5), // .required(),   
+              sattix: Joi.number().integer().min(1).max(5), // .required(),   
+              suntix: Joi.number().integer().min(1).max(5), // .required(),   
+              friprice: Joi.number().integer().min(1).max(2000), // .required(),  
+              satprice: Joi.number().integer().min(1).max(2000), // .required(),  
+              sunprice: Joi.number().integer().min(1).max(2000), // .required(),  
+              remarks: Joi.string().min(1).max(500),
             }
           }
         }
       }
     },
+
+   {
+      // Create a new tweet
+      method: 'POST',
+      path: '/tweets',
+      config: {  
+        handler: function(request, reply) {
+          // first authenticate the user
+          Auth.authenticated(request, function(result){
+            if(result.authenticated) {
+              // post the tweet
+              var db = request.server.plugins['hapi-mongodb'].db;
+              var session = request.session.get('hapi_twitter_session');
+              var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+
+              db.collection('users').findOne({ "_id": ObjectId(session.user_id) }, function(err, user) {
+                if (err) { return reply('Internal MongoDB error', err); }
+                
+                var tweet = {
+                  'message': request.payload.tweet.message,
+                  'user_id': ObjectId(session.user_id),
+                  'username': user.username
+                };
+
+                db.collection('tweets').insert( tweet, function(err, writeResult){
+                  if(err) {
+                    return reply('Internal MongoDB error', err);
+                  } else {
+                    reply(writeResult);
+                  }
+                });
+              });
+            } else {
+              // reply that user is not authenticated
+              reply(result);
+            }
+          });
+        },
+        validate: {
+          payload: {
+            tweet: {
+              message: Joi.string().max(140).required(),
+            }
+          }
+        }
+      }
+    },
+
+
+
+
+
+
 
     {
       // Delete one listing
@@ -126,82 +198,3 @@ exports.register.attributes = {
   name: 'listings-route',
   version: '0.0.1'
 };
-
-
-
-
-//    { //Retrieve all listings WC
-//      method: 'GET',
-//      path: '/listings',
-//      handler: function(request, reply) {
-//       var db = request.server.plugins['hapi-mongodb'].db;
-//       db.collection("listings").find().toArray(function(err, users) {
-//         if(err) { 
-//           return reply('Internal MongoDB error', err); 
-//         }
-//           reply(users);
-//           console.log("great success! All the listings.");
-//       })
-//      }
-//    },
-
-//     { //get listings WC
-//       method: "GET",
-//       path: "/listings/{wooWooWoo}", 
-//       handler: function(request, reply) {
-//         var id       = encodeURIComponent(request.params.wooWooWoo); //make sure it doesn't have weird stuff inside. you need the encode thing if you want to use MONGO.        
-//         var db       = request.server.plugins['hapi-mongodb'].db;    
-//         var ObjectID = request.server.plugins['hapi-mongodb'].ObjectID;    
-
-//         db.collection("listings").findOne( {"_id" :ObjectID(id) }, function(err, obtainedlisting) { //inside the function, err is the err, the second thing is the result.
-//         if (err) throw err;
-//         reply(obtainedlisting);
-//           console.log("Obtained listing! success!")
-//       });    
-//       }
-//     }, 
-
-// //**
-//   { //WC WIP OF listing
-//     method: 'POST',
-//     path: '/listing',
-//     config: {
-//     handler: function(request, reply) { //ALWAYS request reply here.
-//       var newUser = request.payload.userInfo;
-//       var db = request.server.plugins['hapi-mongodb'].db;
-
-//       Bcrypt.genSalt(10, function(err, salt){
-//         Bcrypt.hash(newUser.password, salt, function(err, hash){ //newUser.password accesses the password
-//           newUser.password = hash;
-//           var uniqueUserQuery = {
-//             $or: [ //or, count the number of matching username or matching email.
-//               {username: newUser.username},
-//               {email: newUser.email}
-//             ]
-//           };          
-//           db.collection("users").count(uniqueUserQuery, function(err, userExist){ //if user exists, don't do it, if it doesn't exist, create user.
-//             if(userExist) {
-//               return reply("username or email already exists", err);
-//             }
-//             db.collection("users").insert(newUser, function(err, writeResult){
-//               if(err) {
-//                 return reply("you suck ass, usercreate FAIL");
-//               }
-//                 reply(writeResult);
-//                 console.log("awesome man!")
-//             });
-//           });
-//         })
-//       });
-//     },
-//     validate: {
-//         payload: {
-//           userInfo: {
-//             username: Joi.string().min(3).max(20).required(), 
-//             email: Joi.string().email().max(50).required(),  
-//             password: Joi.string().min(3).max(20).required(),
-//           }
-//         }
-//     }
-//     }
-//   },

@@ -5,7 +5,7 @@ var server = new Hapi.Server();
 
 server.connection({
 	host: '0.0.0.0', //same as localhost. 
-	port: process.env.PORT || 3001, //if you want to deploy to hiroku, then need to add the stuff at the front. It's an environment variable prepared by Heroku deployment. If can find, use that, otherwise, use 3000. Heroku is a remote server on the internet. Note: changed to 3001 for ticketz
+	port: process.env.PORT || 3002, //if you want to deploy to hiroku, then need to add the stuff at the front. It's an environment variable prepared by Heroku deployment. If can find, use that, otherwise, use 3000. Heroku is a remote server on the internet. Note: changed to 3001 for ticketz
 	routes: {
 		cors: {
       headers: ['Access-Control-Allow-Credentials'],
