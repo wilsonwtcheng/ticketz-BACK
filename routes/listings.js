@@ -41,24 +41,27 @@ exports.register = function(server, options, next) {
       path: '/listings',
       config: {
         handler: function(request, reply) {
+          console.log(request.payload);
           Auth.authenticated(request, function(result) {
             if (result.authenticated) {
               var db = request.server.plugins['hapi-mongodb'].db;
               var session = request.session.get('hapi_ticketz_session');
               var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+              //load db collection users in order to retrieve username (so user.username would work here).
               db.collection('users').findOne({ "_id": ObjectId(session.user_id) }, function(err, user) {
                 if (err) { return reply('Internal MongoDB error', err); }
                 var listing = { 
-                  "user_id": ObjectId(session.user_id),
-                  "username": user.username, 
+                 // "user_id": ObjectId(session.user_id),
                   "fritix": request.payload.listing.fritix,
                   "sattix": request.payload.listing.sattix,
-                  "suntiX": request.payload.listing.suntix,
+                  "sunti": request.payload.listing.suntix,
                   "friprice": request.payload.listing.friprice,
                   "satprice": request.payload.listing.satprice,
                   "sunprice": request.payload.listing.sunprice,
                   "dateposted": new Date,      
+                  "username": user.username, 
                   "remarks": request.payload.listing.remarks,
+                  //"contact details":
                 };
               db.collection('listings').insert(listing, function(err, writeResult){
                 if(err) {
@@ -78,71 +81,18 @@ exports.register = function(server, options, next) {
           payload: {
             listing: {
               // Required, Limited to 500 chars
-              fritix: Joi.number().integer().min(1).max(5), // .required(),   
-              sattix: Joi.number().integer().min(1).max(5), // .required(),   
-              suntix: Joi.number().integer().min(1).max(5), // .required(),   
-              friprice: Joi.number().integer().min(1).max(2000), // .required(),  
-              satprice: Joi.number().integer().min(1).max(2000), // .required(),  
-              sunprice: Joi.number().integer().min(1).max(2000), // .required(),  
-              remarks: Joi.string().min(1).max(500),
+              fritix: Joi.number().integer().max(5).allow(''), // .required(),   
+              sattix: Joi.number().integer().max(5).allow(''), // .required(),   
+              suntix: Joi.number().integer().max(5).allow(''), // .required(),   
+              friprice: Joi.number().integer().max(2000).allow(''), // .required(),  
+              satprice: Joi.number().integer().max(2000).allow(''), // .required(),  
+              sunprice: Joi.number().integer().max(2000).allow(''), // .required(),  
+              remarks: Joi.string().max(500).allow(''),
             }
           }
         }
       }
     },
-
-   {
-      // Create a new tweet
-      method: 'POST',
-      path: '/tweets',
-      config: {  
-        handler: function(request, reply) {
-          // first authenticate the user
-          Auth.authenticated(request, function(result){
-            if(result.authenticated) {
-              // post the tweet
-              var db = request.server.plugins['hapi-mongodb'].db;
-              var session = request.session.get('hapi_twitter_session');
-              var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
-
-              db.collection('users').findOne({ "_id": ObjectId(session.user_id) }, function(err, user) {
-                if (err) { return reply('Internal MongoDB error', err); }
-                
-                var tweet = {
-                  'message': request.payload.tweet.message,
-                  'user_id': ObjectId(session.user_id),
-                  'username': user.username
-                };
-
-                db.collection('tweets').insert( tweet, function(err, writeResult){
-                  if(err) {
-                    return reply('Internal MongoDB error', err);
-                  } else {
-                    reply(writeResult);
-                  }
-                });
-              });
-            } else {
-              // reply that user is not authenticated
-              reply(result);
-            }
-          });
-        },
-        validate: {
-          payload: {
-            tweet: {
-              message: Joi.string().max(140).required(),
-            }
-          }
-        }
-      }
-    },
-
-
-
-
-
-
 
     {
       // Delete one listing
