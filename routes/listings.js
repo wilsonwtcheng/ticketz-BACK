@@ -41,7 +41,7 @@ exports.register = function(server, options, next) {
       path: '/listings',
       config: {
         handler: function(request, reply) {
-          console.log(request.payload);
+         // console.log(request.payload);
           Auth.authenticated(request, function(result) {
             if (result.authenticated) {
               var db = request.server.plugins['hapi-mongodb'].db;
@@ -54,7 +54,7 @@ exports.register = function(server, options, next) {
                  // "user_id": ObjectId(session.user_id),
                   "fritix": request.payload.listing.fritix,
                   "sattix": request.payload.listing.sattix,
-                  "sunti": request.payload.listing.suntix,
+                  "suntix": request.payload.listing.suntix,
                   "friprice": request.payload.listing.friprice,
                   "satprice": request.payload.listing.satprice,
                   "sunprice": request.payload.listing.sunprice,
@@ -81,9 +81,9 @@ exports.register = function(server, options, next) {
           payload: {
             listing: {
               // Required, Limited to 500 chars
-              fritix: Joi.number().integer().max(5).allow(''), // .required(),   
-              sattix: Joi.number().integer().max(5).allow(''), // .required(),   
-              suntix: Joi.number().integer().max(5).allow(''), // .required(),   
+              fritix: Joi.number().integer().max(10).allow(''), // .required(),   
+              sattix: Joi.number().integer().max(10).allow(''), // .required(),   
+              suntix: Joi.number().integer().max(10).allow(''), // .required(),   
               friprice: Joi.number().integer().max(2000).allow(''), // .required(),  
               satprice: Joi.number().integer().max(2000).allow(''), // .required(),  
               sunprice: Joi.number().integer().max(2000).allow(''), // .required(),  
