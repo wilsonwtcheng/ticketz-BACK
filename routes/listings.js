@@ -60,6 +60,7 @@ exports.register = function(server, options, next) {
                   "sunprice": request.payload.listing.sunprice,
                   "dateposted": new Date,      
                   "username": user.username, 
+                  "contactinfo": request.payload.listing.contactinfo, 
                   "remarks": request.payload.listing.remarks,
                   //"contact details":
                 };
@@ -80,13 +81,13 @@ exports.register = function(server, options, next) {
         validate: {
           payload: {
             listing: {
-              // Required, Limited to 500 chars
-              fritix: Joi.number().integer().max(10).allow(''), // .required(),   
-              sattix: Joi.number().integer().max(10).allow(''), // .required(),   
-              suntix: Joi.number().integer().max(10).allow(''), // .required(),   
-              friprice: Joi.number().integer().max(2000).allow(''), // .required(),  
-              satprice: Joi.number().integer().max(2000).allow(''), // .required(),  
-              sunprice: Joi.number().integer().max(2000).allow(''), // .required(),  
+              fritix: Joi.number().integer().max(10).allow(''),    
+              sattix: Joi.number().integer().max(10).allow(''),    
+              suntix: Joi.number().integer().max(10).allow(''),    
+              friprice: Joi.number().integer().max(2000).allow(''),   
+              satprice: Joi.number().integer().max(2000).allow(''),   
+              sunprice: Joi.number().integer().max(2000).allow(''),   
+              contactinfo: Joi.string().max(500).required(),  
               remarks: Joi.string().max(500).allow(''),
             }
           }
@@ -118,6 +119,29 @@ exports.register = function(server, options, next) {
       }
     },
 
+    { // SEARCH function from harryquotes
+      method: 'GET',
+      path: '/listings/search/{searchQuery}', 
+      handler: function (request, reply) { 
+        var db = request.server.plugins['hapi-mongodb'].db;  
+        db.collection('listings').createIndex( { remarks: "text" } );   
+        var query = { $text: { $search: request.params.searchQuery} }; 
+        db.collection('listings').find(query).toArray(function(err, result){ 
+          if (err) throw err;
+          reply(result); 
+        });
+      }
+    }
+
+  ]);
+
+  next();
+};
+
+exports.register.attributes = {
+  name: 'listings-route',
+  version: '0.0.1'
+};
     // {
   // Retrieve all listings by a specific user. Note: haven't done frontend for this. black out: apparent conflict with listings/{id}
     //   method: 'GET',
@@ -139,12 +163,19 @@ exports.register = function(server, options, next) {
     // },
 
 
-  ]);
 
-  next();
-};
-
-exports.register.attributes = {
-  name: 'listings-route',
-  version: '0.0.1'
-};
+    
+  //       { // SEARCH QUOTES
+  //     method: 'GET',
+  //     path: '/quotes/search/{searchQuery}', //has to match the stuff after request.params.  (it's how you access it). You have to wrap it in {}. Whatever the usertype there you can access it.
+  //     handler: function (request, reply) { // eg. Postman is a request. User sends the request. Thru postman or front-end. Reply is the output. It's what the server gives back to the user. The first thing is the request, second thing is the reply, no matter what you call them. Eg. if you call the first thing inside the function "bullshit", it will still be a request.
+  //       var db = request.server.plugins['hapi-mongodb'].db; //connecting nitrous to mongo database. the "db" in "var db" corresponds to the "Db" in "db.collection". the .db is just convention for accessing the database. It knows what db because we named it in index.js! 
+  //       db.collection('quotes').createIndex( { quote: "text" } );   //payload is when you put (usually) the key:value pair into an input box. params is when you access it through the url bar.
+  //       var query = { "$text": { "$search": request.params.searchQuery} }; //looks into the url bar for the searchquery.
+  //       db.collection('quotes').find(query).toArray(function(err, result){ //got nitrous to read the stuff, you have to put it in an array. otherwise it just reads it as a bunch of strings. callback is like "can you send me a response after you've done everything". e.g. to the server(DIMPLE):  find your phonebook, find fer's number (dimple knows I'm looking for fer's number because i wrote it in the url), put it into a format i like, after you done all that, send it back to me user.
+  //         if (err) throw err;
+  //         reply(result); //you only want it to reply when it's successful (ie. no errors). to do this, run the "callback" function.
+  //       });
+  //     }
+  //   }
+  // ]);
