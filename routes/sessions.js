@@ -93,6 +93,7 @@ var Auth = require('./auth')
 			db.collection("sessions").remove({"session_id": session.session_key}, function(err, writeResult) {
 				if(err) {return reply("Internal MongoDB error", err);}
 				return reply(writeResult);
+				
 			});
 			}
  		}

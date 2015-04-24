@@ -35,6 +35,23 @@ exports.register = function(server, options, next) {
       }
     },
 
+//    {
+
+    //   // Retrieve all listings for friday?
+    //   method: 'GET',
+    //   path: '/listings/{id}',
+    //   handler: function(request, reply) {
+    //     var listing_id = encodeURIComponent(request.params.id);
+    //     var db = request.server.plugins['hapi-mongodb'].db;
+    //     var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+    //     db.collection('listings').findOne({ "_id": ObjectId(listing_id)}, function(err, listing) {
+    //       if (err) { return reply('Internal MongoDB error', err); }
+    //       reply(listing);
+    //     })
+    //   }
+    // },
+
+
     {
       // Create a new listing
       method: 'POST',
@@ -58,7 +75,7 @@ exports.register = function(server, options, next) {
                   "friprice": request.payload.listing.friprice,
                   "satprice": request.payload.listing.satprice,
                   "sunprice": request.payload.listing.sunprice,
-                  "dateposted": new Date,      
+                  "dateposted": new Date(),      
                   "username": user.username, 
                   "contactinfo": request.payload.listing.contactinfo, 
                   "remarks": request.payload.listing.remarks,
@@ -81,9 +98,9 @@ exports.register = function(server, options, next) {
         validate: {
           payload: {
             listing: {
-              fritix: Joi.number().integer().max(10).allow(''),    
-              sattix: Joi.number().integer().max(10).allow(''),    
-              suntix: Joi.number().integer().max(10).allow(''),    
+              fritix: Joi.number().integer().max(20).allow(''),    
+              sattix: Joi.number().integer().max(20).allow(''),    
+              suntix: Joi.number().integer().max(20).allow(''),    
               friprice: Joi.number().integer().max(2000).allow(''),   
               satprice: Joi.number().integer().max(2000).allow(''),   
               sunprice: Joi.number().integer().max(2000).allow(''),   
@@ -119,14 +136,118 @@ exports.register = function(server, options, next) {
       }
     },
 
-    { // SEARCH function from harryquotes
+    { // SEARCH function for REMARKS
       method: 'GET',
-      path: '/listings/search/{searchQuery}', 
+      path: '/listings/search/remarks/{searchQuery}', 
       handler: function (request, reply) { 
         var db = request.server.plugins['hapi-mongodb'].db;  
         db.collection('listings').createIndex( { remarks: "text" } );   
         var query = { $text: { $search: request.params.searchQuery} }; 
         db.collection('listings').find(query).toArray(function(err, result){ 
+          if (err) throw err;
+          reply(result); 
+        });
+      }
+    },
+
+    { // SEARCH function by USERS
+      method: 'GET',
+      path: '/listings/search/users/{searchQuery}', 
+      handler: function (request, reply) { 
+        var db = request.server.plugins['hapi-mongodb'].db;  
+        db.collection('listings').createIndex( { username: "text" } );   
+        var query = { $text: { $search: request.params.searchQuery} }; 
+        db.collection('listings').find(query).toArray(function(err, result){ 
+          if (err) throw err;
+          reply(result); 
+        });
+      }
+    },
+
+    { // SEARCH function by number of FRIDAY tix
+      method: 'GET',
+      path: '/listings/search/friday/{searchQuery}', 
+      handler: function (request, reply) { 
+        var db = request.server.plugins['hapi-mongodb'].db;  
+        var query = {fritix: Number(request.params.searchQuery)};
+
+        db.collection('listings').find(query).toArray(function(err, result){ 
+          if (err) throw err;
+          reply(result); 
+        });
+      }
+    },
+
+    { // SEARCH function by number of SATURDAY tix
+      method: 'GET',
+      path: '/listings/search/saturday/{searchQuery}', 
+      handler: function (request, reply) { 
+        var db = request.server.plugins['hapi-mongodb'].db;  
+        var query = {sattix: Number(request.params.searchQuery)};
+
+        db.collection('listings').find(query).toArray(function(err, result){ 
+          if (err) throw err;
+          reply(result); 
+        });
+      }
+    },
+
+    { // SEARCH function by number of SUNDAY tix
+      method: 'GET',
+      path: '/listings/search/sunday/{searchQuery}', 
+      handler: function (request, reply) { 
+        var db = request.server.plugins['hapi-mongodb'].db;  
+        var query = {suntix: Number(request.params.searchQuery)};
+
+        db.collection('listings').find(query).toArray(function(err, result){ 
+          if (err) throw err;
+          reply(result); 
+        });
+      }
+    },
+
+    { // Show all friday tix NEW
+      method: 'GET',
+      path: '/listings/search/friday', 
+      handler: function (request, reply) { 
+        var db = request.server.plugins['hapi-mongodb'].db;  
+        db.collection('listings').find({fritix: {$gt: 0}}).toArray(function(err, result){ 
+          if (err) throw err;
+          reply(result); 
+        });
+      }
+    },
+
+    // { // Show all friday tix
+    //   method: 'GET',
+    //   path: '/listings/search/friday', 
+    //   handler: function (request, reply) { 
+    //     var db = request.server.plugins['hapi-mongodb'].db;  
+    //     db.collection('listings').find().toArray(function(err, result){ 
+    //       if (err) throw err;
+    //       reply(result); 
+    //     });
+    //   }
+    // },
+
+    { // Show all saturday tix
+      method: 'GET',
+      path: '/listings/search/saturday', 
+      handler: function (request, reply) { 
+        var db = request.server.plugins['hapi-mongodb'].db;  
+        db.collection('listings').find({sattix: {$gt: 0}}).toArray(function(err, result){ 
+          if (err) throw err;
+          reply(result); 
+        });
+      }
+    },
+
+    { // Show all sunday tix
+      method: 'GET',
+      path: '/listings/search/sunday', 
+      handler: function (request, reply) { 
+        var db = request.server.plugins['hapi-mongodb'].db;  
+        db.collection('listings').find({suntix: {$gt: 0}}).toArray(function(err, result){ 
           if (err) throw err;
           reply(result); 
         });
