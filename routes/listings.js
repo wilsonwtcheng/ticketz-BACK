@@ -35,23 +35,6 @@ exports.register = function(server, options, next) {
       }
     },
 
-//    {
-
-    //   // Retrieve all listings for friday?
-    //   method: 'GET',
-    //   path: '/listings/{id}',
-    //   handler: function(request, reply) {
-    //     var listing_id = encodeURIComponent(request.params.id);
-    //     var db = request.server.plugins['hapi-mongodb'].db;
-    //     var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
-    //     db.collection('listings').findOne({ "_id": ObjectId(listing_id)}, function(err, listing) {
-    //       if (err) { return reply('Internal MongoDB error', err); }
-    //       reply(listing);
-    //     })
-    //   }
-    // },
-
-
     {
       // Create a new listing
       method: 'POST',
@@ -206,6 +189,7 @@ exports.register = function(server, options, next) {
       }
     },
 
+
     { // Show all friday tix NEW
       method: 'GET',
       path: '/listings/search/friday', 
@@ -217,18 +201,6 @@ exports.register = function(server, options, next) {
         });
       }
     },
-
-    // { // Show all friday tix
-    //   method: 'GET',
-    //   path: '/listings/search/friday', 
-    //   handler: function (request, reply) { 
-    //     var db = request.server.plugins['hapi-mongodb'].db;  
-    //     db.collection('listings').find().toArray(function(err, result){ 
-    //       if (err) throw err;
-    //       reply(result); 
-    //     });
-    //   }
-    // },
 
     { // Show all saturday tix
       method: 'GET',
